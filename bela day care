@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickup Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+        .client-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .client-card button {
+            margin-top: 5px;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Client Pickup Manager</h1>
+
+        <!-- Form to add new client -->
+        <div>
+            <label for="clientName">Client Name:</label>
+            <input type="text" id="clientName" required><br><br>
+
+            <label for="pickupTime">Pickup Time:</label>
+            <input type="time" id="pickupTime" required><br><br>
+
+            <label for="clientAddress">Client Address:</label>
+            <input type="text" id="clientAddress" required><br><br>
+
+            <label for="clientContact">Client Contact:</label>
+            <input type="text" id="clientContact" required><br><br>
+
+            <button onclick="addClient()">Add Client</button>
+        </div>
+
+        <!-- List of clients -->
+        <div id="clientList">
+            <h2>Clients:</h2>
+        </div>
+    </div>
+
+    <script>
+        // Initialize stored clients
+        let clients = JSON.parse(localStorage.getItem('clients')) || [];
+
+        // Add new client to the list and local storage
+        function addClient() {
+            const name = document.getElementById('clientName').value;
+            const time = document.getElementById('pickupTime').value;
+            const address = document.getElementById('clientAddress').value;
+            const contact = document.getElementById('clientContact').value;
+
+            if (name && time && address && contact) {
+                const client = { name, time, address, contact, completed: false };
+                clients.push(client);
+                localStorage.setItem('clients', JSON.stringify(clients));
+                displayClients();
+            } else {
+                alert('Please fill in all fields');
+            }
+        }
+
+        // Display all clients
+        function displayClients() {
+            const clientList = document.getElementById('clientList');
+            clientList.innerHTML = '<h2>Clients:</h2>';
+            clients.forEach((client, index) => {
+                const clientCard = `
+                    <div class="client-card ${client.completed ? 'completed' : ''}">
+                        <strong>${client.name}</strong> <br>
+                        Pickup Time: ${client.time} <br>
+                        Address: ${client.address} <br>
+                        Contact: ${client.contact} <br>
+                        <button onclick="startJourney(${index})" ${client.completed ? 'disabled' : ''}>Start Journey</button>
+                    </div>
+                `;
+                clientList.innerHTML += clientCard;
+            });
+        }
+
+        // Start the journey to the client's address
+        function startJourney(index) {
+            const client = clients[index];
+            const navigate = confirm(`Navigate to ${client.address}?`);
+            if (navigate) {
+                window.open(`http://maps.apple.com/?q=${encodeURIComponent(client.address)}`, '_blank');
+                setTimeout(() => {
+                    showArrivalPrompt(index);
+                }, 1000); // Simulate time delay for navigation
+            }
+        }
+
+        // Show "You Have Arrived" message and Arrived button
+        function showArrivalPrompt(index) {
+            const arrived = confirm('You have arrived. Press OK to confirm.');
+            if (arrived) {
+                markAsArrived(index);
+            }
+        }
+
+        // Mark client as arrived/completed
+        function markAsArrived(index) {
+            clients[index].completed = true;
+            localStorage.setItem('clients', JSON.stringify(clients));
+            displayClients();
+        }
+
+        // Initialize client list on page load
+        window.onload = displayClients;
+    </script>
+</body>
+</html>
